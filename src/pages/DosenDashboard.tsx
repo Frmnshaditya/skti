@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState } from "react";
-import { collection, getDocs, deleteDoc, doc, query, where } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { MahasiswaData } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -16,16 +16,34 @@ import {
   Eye, 
   UserPlus,
   Filter,
-  MoreVertical,
   TrendingUp,
-  Award
+  Award,
+  X,
+  Save,
+  User,
+  Hash,
+  MapPin,
+  Phone,
+  BookOpen
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { handleFirestoreError, OperationType } from "../lib/firestoreUtils";
 
 export default function DosenDashboard() {
   const [students, setStudents] = useState<MahasiswaData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [formData, setFormData] = useState<Partial<MahasiswaData>>({
+    namaLengkap: "",
+    nim: "",
+    alamat: "",
+    nomorTelepon: "",
+    kelas: ""
+  });
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -33,8 +51,9 @@ export default function DosenDashboard() {
       const querySnapshot = await getDocs(collection(db, "mahasiswas"));
       const studentData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MahasiswaData));
       setStudents(studentData);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching students:", err);
+      handleFirestoreError(err, OperationType.LIST, "mahasiswas");
     }
     setLoading(false);
   };
@@ -43,24 +62,61 @@ export default function DosenDashboard() {
     fetchStudents();
   }, []);
 
+  const handleAddData = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      const docId = `mhs_${Date.now()}`;
+      const payload = {
+        ...formData,
+        userId: `manual_${Date.now()}`, // Placeholder for manually added students
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      
+      await setDoc(doc(db, "mahasiswas", docId), payload);
+      setIsModalOpen(false);
+      setFormData({
+        namaLengkap: "",
+        nim: "",
+        alamat: "",
+        nomorTelepon: "",
+        kelas: ""
+      });
+      fetchStudents();
+    } catch (err: any) {
+      console.error("Error adding student:", err);
+      try {
+        handleFirestoreError(err, OperationType.CREATE, "mahasiswas");
+      } catch (errorWithInfo: any) {
+        const info = JSON.parse(errorWithInfo.message);
+        setError(`Gagal: ${info.error}`);
+      }
+    }
+    setSaving(false);
+  };
+
   const handleDelete = async (id: string) => {
     if (window.confirm("Yakin ingin menghapus data mahasiswa ini?")) {
       try {
         await deleteDoc(doc(db, "mahasiswas", id));
         fetchStudents();
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error deleting student:", err);
+        handleFirestoreError(err, OperationType.DELETE, `mahasiswas/${id}`);
       }
     }
   };
 
   const filteredStudents = students.filter(s => 
-    s.namaLengkap.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.nim.includes(searchTerm)
+    (s.namaLengkap?.toLowerCase().includes(searchTerm.toLowerCase()) || false) ||
+    (s.nim?.includes(searchTerm) || false)
   );
 
   return (
     <div className="space-y-12">
+      {/* Existing Header */}
       <header className="flex justify-between items-end">
         <div>
           <h1 className="text-6xl font-display font-bold tracking-tighter mb-4">DOSEN PANEL</h1>
@@ -100,11 +156,122 @@ export default function DosenDashboard() {
           <button className="brutalist-button bg-white hover:bg-gray-50 flex items-center gap-2">
             <Filter size={20} /> FILTER
           </button>
-          <button className="brutalist-button bg-black text-white hover:bg-neon-blue flex items-center gap-2">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            className="brutalist-button bg-black text-white hover:bg-neon-blue flex items-center gap-2"
+          >
             <UserPlus size={20} /> TAMBAH DATA
           </button>
         </div>
       </div>
+
+      {/* Modal Add Student */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-2xl brutalist-card bg-white p-8 md:p-12 overflow-y-auto max-h-[90vh]"
+            >
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="absolute right-6 top-6 p-2 border-2 border-black hover:bg-neon-red transition-colors"
+              >
+                <X size={24} />
+              </button>
+
+              <h2 className="text-4xl font-display font-bold mb-8 uppercase">Tambah Mahasiswa</h2>
+
+              <form onSubmit={handleAddData} className="space-y-6">
+                 {error && (
+                   <div className="p-4 bg-red-100 border-2 border-red-500 font-bold text-red-600">
+                     {error}
+                   </div>
+                 )}
+                 <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="font-bold text-sm flex items-center gap-2">
+                        <User size={16} /> NAMA LENGKAP
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full brutalist-input"
+                        value={formData.namaLengkap}
+                        onChange={(e) => setFormData({...formData, namaLengkap: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-bold text-sm flex items-center gap-2">
+                        <Hash size={16} /> NIM
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full brutalist-input"
+                        value={formData.nim}
+                        onChange={(e) => setFormData({...formData, nim: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-bold text-sm flex items-center gap-2">
+                        <BookOpen size={16} /> KELAS
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="w-full brutalist-input"
+                        value={formData.kelas}
+                        onChange={(e) => setFormData({...formData, kelas: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="font-bold text-sm flex items-center gap-2">
+                        <Phone size={16} /> TELEPON
+                      </label>
+                      <input
+                        type="tel"
+                        className="w-full brutalist-input"
+                        value={formData.nomorTelepon}
+                        onChange={(e) => setFormData({...formData, nomorTelepon: e.target.value})}
+                      />
+                    </div>
+                 </div>
+                 <div className="space-y-2">
+                    <label className="font-bold text-sm flex items-center gap-2">
+                      <MapPin size={16} /> ALAMAT
+                    </label>
+                    <textarea
+                      rows={3}
+                      className="w-full brutalist-input"
+                      value={formData.alamat}
+                      onChange={(e) => setFormData({...formData, alamat: e.target.value})}
+                    />
+                 </div>
+
+                 <div className="pt-6 flex justify-end">
+                    <button 
+                      type="submit"
+                      disabled={saving}
+                      className="brutalist-button bg-black text-white hover:bg-neon-blue flex items-center gap-2 px-12"
+                    >
+                      <Save size={20} /> {saving ? "MENYIMPAN..." : "SIMPAN"}
+                    </button>
+                 </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Table Section */}
       <div className="brutalist-card bg-white overflow-hidden">

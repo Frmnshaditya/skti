@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   createUserWithEmailAndPassword, 
@@ -28,6 +28,13 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    // Redirect to home if user already has a profile
+    if (user && profile) {
+      navigate("/");
+    }
+  }, [user, profile, navigate]);
 
   const handleManualRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,10 +146,16 @@ export default function RegisterPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-16 h-16 border-8 border-black border-t-neon-blue rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-neon-blue p-6">
+        <div className="w-24 h-24 border-[12px] border-black border-t-white rounded-full animate-spin mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]" />
+        <h1 className="text-3xl font-display font-bold uppercase">Memuat SAKTI...</h1>
       </div>
     );
+  }
+
+  // If user is logged in and has profile, we wait for the useEffect redirect
+  if (user && profile) {
+    return null;
   }
 
   if (user && !profile) {

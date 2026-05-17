@@ -2,5 +2,5 @@
   "name": "SAKTI - Sistem Akademik",
   "description": "Modern Academic Information System with Multi-role support, Neobrutalist UI, and Secure Backend.",
   "requestFramePermissions": [],
-  "majorCapabilities": []
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

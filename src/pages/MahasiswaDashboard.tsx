@@ -11,12 +11,15 @@ import { MahasiswaData } from "../types";
 import { motion } from "motion/react";
 import { User, MapPin, Phone, Hash, BookOpen, Save, CheckCircle } from "lucide-react";
 
+import { handleFirestoreError, OperationType } from "../lib/firestoreUtils";
+
 export default function MahasiswaDashboard() {
   const { user, profile } = useAuth();
   const [data, setData] = useState<MahasiswaData | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,8 +43,14 @@ export default function MahasiswaDashboard() {
             updatedAt: ""
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Error fetching mahasiswa data:", err);
+        try {
+          handleFirestoreError(err, OperationType.LIST, "mahasiswas");
+        } catch (errorWithInfo: any) {
+          const info = JSON.parse(errorWithInfo.message);
+          setError(`Gagal memuat data: ${info.error}`);
+        }
       }
       setLoading(false);
     };
@@ -54,6 +63,7 @@ export default function MahasiswaDashboard() {
     if (!user || !data) return;
     setSaving(true);
     setSuccess(false);
+    setError(null);
 
     try {
       const docId = data.id || `mhs_${user.uid}`;
@@ -68,8 +78,14 @@ export default function MahasiswaDashboard() {
       await setDoc(doc(db, "mahasiswas", docId), saveableData, { merge: true });
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error saving data:", err);
+      try {
+        handleFirestoreError(err, OperationType.WRITE, `mahasiswas/${data.id || 'new'}`);
+      } catch (errorWithInfo: any) {
+        const info = JSON.parse(errorWithInfo.message);
+        setError(`Gagal menyimpan: ${info.error}`);
+      }
     }
     setSaving(false);
   };
@@ -210,7 +226,12 @@ export default function MahasiswaDashboard() {
                  <span>Data berhasil disimpan secara brutal!</span>
               </div>
             )}
-            {!success && <div></div>}
+            {error && (
+              <div className="flex items-center space-x-2 text-red-600 font-bold">
+                 <span>{error}</span>
+              </div>
+            )}
+            {!success && !error && <div></div>}
             <button
               type="submit"
               disabled={saving}

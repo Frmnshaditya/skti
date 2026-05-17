@@ -32,8 +32,14 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  let message = error instanceof Error ? error.message : String(error);
+  
+  if (message.includes('offline')) {
+    message = "Firestore offline. Pastikan database Firestore sudah dibuat di Firebase Console dan pastikan 'Native Mode' aktif. Jika baru saja dibuat, tunggu beberapa menit.";
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: message,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,

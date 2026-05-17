@@ -28,8 +28,8 @@ export const DashboardLayout: React.FC = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Check email verification if required (prompt says "User belum verified tidak dapat akses dashboard")
-  if (user && !user.emailVerified) {
+  // Check email verification if required (allow bypass if emailVerifiedAt is set in Firestore)
+  if (user && !user.emailVerified && !profile?.emailVerifiedAt) {
     return <Navigate to="/verify-email" replace />;
   }
 

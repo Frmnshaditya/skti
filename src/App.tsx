@@ -20,8 +20,16 @@ function RootRoute() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-16 h-16 border-8 border-black border-t-neon-blue rounded-full animate-spin" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-neon-blue p-6">
+        <div className="w-24 h-24 border-[12px] border-black border-t-white rounded-full animate-spin mb-8 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]" />
+        <h1 className="text-3xl font-display font-bold uppercase">Memuat SAKTI...</h1>
+        <p className="font-mono mt-4 font-bold">Menyiapkan lingkungan akademik Anda</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-8 brutalist-button bg-white text-sm py-2"
+        >
+          REFRESH JIKA TERLALU LAMA
+        </button>
       </div>
     );
   }

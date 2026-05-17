@@ -10,6 +10,10 @@ import { getAnalytics } from "firebase/analytics";
 import firebaseConfig from "../../firebase-applet-config.json";
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+const dbId = (firebaseConfig as any).firestoreDatabaseId;
+
+console.log("Initializing Firestore with Project ID:", firebaseConfig.projectId, "Database ID:", dbId || "(default)");
+
+export const db = dbId && dbId !== "(default)" ? getFirestore(app, dbId) : getFirestore(app);
 export const auth = getAuth(app);
 export const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
