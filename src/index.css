@@ -1,0 +1,38 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-neon-blue: #00e5ff;
+  --color-neon-green: #39ff14;
+  --color-neon-purple: #bc13fe;
+  --color-neon-yellow: #fff01f;
+}
+
+@layer base {
+  body {
+    @apply font-sans bg-white text-black;
+  }
+}
+
+@layer components {
+  .brutalist-card {
+    @apply bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+  }
+  
+  .brutalist-button {
+    @apply px-6 py-3 bg-white border-3 border-black font-display font-bold text-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all cursor-pointer;
+  }
+  
+  .brutalist-input {
+    @apply px-4 py-3 bg-white border-3 border-black font-sans focus:outline-none focus:ring-0 focus:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all;
+  }
+
+  .brutalist-badge {
+    @apply px-2 py-0.5 border-2 border-black font-bold uppercase text-[10px] tracking-widest;
+  }
+}
+

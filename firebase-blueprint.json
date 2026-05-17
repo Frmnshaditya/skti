@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Core identity and role of the user (Student or Lecturer)",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name" },
+        "email": { "type": "string", "format": "email", "description": "User email" },
+        "role": { "type": "string", "enum": ["mahasiswa", "dosen"], "description": "System role" },
+        "emailVerifiedAt": { "type": "string", "format": "date-time", "description": "When email was verified" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "email", "role"]
+    },
+    "Mahasiswa": {
+      "title": "Mahasiswa Data",
+      "description": "Specific academic data for students",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Reference to User UID" },
+        "namaLengkap": { "type": "string" },
+        "nim": { "type": "string" },
+        "alamat": { "type": "string" },
+        "nomorTelepon": { "type": "string" },
+        "kelas": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "namaLengkap", "nim"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Users profile and roles"
+    },
+    "/mahasiswas/{mahasiswaId}": {
+      "schema": "Mahasiswa",
+      "description": "Detailed student information"
+    }
+  }
+}
